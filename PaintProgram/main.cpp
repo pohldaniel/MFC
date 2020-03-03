@@ -9,19 +9,28 @@ CMainView::CMainView(CFrameWnd *parent) {
 
 void CMainView::OnDraw(class CDC *pDC) {
 
+	newPen.CreatePenIndirect(&m_mainFrame->gLogPen);
+	mhOldPen = pDC->SelectObject(&newPen);
+
+	newBrush.CreateBrushIndirect(&m_mainFrame->gLogBrush);
+	mhOldBrush = pDC->SelectObject(&newBrush);
+	
 	switch (m_mainFrame->m_shape) {
 
 		case CMainFrame::SHAPE::LINE:
 			pDC->MoveTo(p0.x, p0.y);
 			pDC->LineTo(p1.x, p1.y);
 			return;
-	case CMainFrame::SHAPE::RECTANGLE:
+		case CMainFrame::SHAPE::RECTANGLE:
 			pDC->Rectangle(p0.x, p0.y, p1.x, p1.y);
 			return;
-	case CMainFrame::SHAPE::ELLIPSE:
+		case CMainFrame::SHAPE::ELLIPSE:
 			pDC->Ellipse(p0.x, p0.y, p1.x, p1.y);
 			return;
 	}
+
+	pDC->SelectObject(mhOldPen);
+	pDC->SelectObject(mhOldBrush);
 }
 
 BEGIN_MESSAGE_MAP(CMainView, CView)
@@ -76,18 +85,6 @@ void CMainView::OnLButtonDown(UINT nFlags, CPoint point){
 	SetCapture();
 	gMouseDown = true;
 
-
-	switch (m_mainFrame->gCurrPrimSel){
-	case ID_PRIMITIVE_LINE:
-		m_mainFrame->m_shape = CMainFrame::SHAPE::LINE;
-		break;
-	case ID_PRIMITIVE_RECTANGLE:
-		m_mainFrame->m_shape = CMainFrame::SHAPE::RECTANGLE;
-		break;
-	case ID_PRIMITIVE_ELLIPSE:	
-		m_mainFrame->m_shape = CMainFrame::SHAPE::ELLIPSE;
-		break;
-	};
 }
 
 void CMainView::OnLButtonUp(UINT nFlags, CPoint point){
@@ -133,10 +130,20 @@ CMainFrame::CMainFrame(std::string title) {
 	m_hMenu = this->GetMenu()->GetSafeHmenu();
 
 	CheckMenuItem(m_hMenu, ID_PRIMITIVE_LINE, MF_CHECKED);
-	CheckMenuItem(m_hMenu, ID_PENCOLOR_BLACK, MF_CHECKED);
+	CheckMenuItem(m_hMenu, ID_PENCOLOR_BLACK, MF_CHECKED);	
 	CheckMenuItem(m_hMenu, ID_BRUSHCOLOR_BLACK, MF_CHECKED);
 	CheckMenuItem(m_hMenu, ID_PENSTYLE_SOLID, MF_CHECKED);
 	CheckMenuItem(m_hMenu, ID_BRUSHSTYLE_SOLID, MF_CHECKED);
+
+	m_shape = SHAPE::LINE;
+
+	gLogPen.lopnColor = BLACK;
+	gLogPen.lopnStyle = PS_SOLID;
+	gLogPen.lopnWidth = CPoint(1, 105);
+
+	gLogBrush.lbColor = BLACK;
+	gLogBrush.lbStyle = BS_SOLID;
+	gLogBrush.lbHatch = HS_DIAGCROSS;
 }
 
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
@@ -156,15 +163,16 @@ END_MESSAGE_MAP()
 
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
 
-	if (CFrameWnd::OnCreate(lpCreateStruct) == 0)
+	if (CFrameWnd::OnCreate(lpCreateStruct) == 0) {
+		
 		return 0;
+	}
 	return -1;
 }
 
 void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus){
 
 	CFrameWnd::OnShowWindow(bShow, nStatus);
-	// TODO: Add your message handler code here
 	//ShowWindow(SW_MAXIMIZE);
 }
 
@@ -190,7 +198,6 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy){
 void CMainFrame::OnMove(int x, int y){
 
 	CFrameWnd::OnMove(x, y);
-	// TODO: Add your message handler code here
 	char *MsgCoord = new char[50];
 	sprintf(MsgCoord, "Frame-Position: Left = %d | Top = %d", x, y);
 
@@ -206,7 +213,6 @@ void CMainFrame::OnMove(int x, int y){
 void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags){
 
 	switch (nChar){
-
 		case VK_RETURN:
 			MessageBox(L"You pressed Enter");
 			break;
@@ -226,7 +232,6 @@ void CMainFrame::OnLButtonDown(UINT nFlags, CPoint point){
 	HWND hwnd = NULL;
 	if (pWnd){
 		hwnd = pWnd->GetSafeHwnd();
-
 		SetWindowTextA(hwnd, MsgCoord);
 	}
 }
@@ -260,16 +265,19 @@ void CMainFrame::OnDoSomething(UINT nID){
 		CheckMenuItem(m_hMenu, ID_PRIMITIVE_LINE, MF_CHECKED);
 		CheckMenuItem(m_hMenu, gCurrPrimSel, MF_UNCHECKED);
 		gCurrPrimSel = ID_PRIMITIVE_LINE;
+		m_shape = SHAPE::LINE;
 		return;
 	case ID_PRIMITIVE_RECTANGLE:
 		CheckMenuItem(m_hMenu, ID_PRIMITIVE_RECTANGLE, MF_CHECKED);
 		CheckMenuItem(m_hMenu, gCurrPrimSel, MF_UNCHECKED);
 		gCurrPrimSel = ID_PRIMITIVE_RECTANGLE;
+		m_shape = SHAPE::RECTANGLE;
 		return;
 	case ID_PRIMITIVE_ELLIPSE:
 		CheckMenuItem(m_hMenu, ID_PRIMITIVE_ELLIPSE, MF_CHECKED);
 		CheckMenuItem(m_hMenu, gCurrPrimSel, MF_UNCHECKED);
 		gCurrPrimSel = ID_PRIMITIVE_ELLIPSE;
+		m_shape = SHAPE::ELLIPSE;
 		return;
 		//=======================================
 		// Pen Colors              
@@ -279,7 +287,6 @@ void CMainFrame::OnDoSomething(UINT nID){
 		CheckMenuItem(m_hMenu, gCurrPenColSel, MF_UNCHECKED);
 		gCurrPenColSel = ID_PENCOLOR_BLACK;
 		gLogPen.lopnColor = BLACK;
-
 		return;
 	case ID_PENCOLOR_WHITE:
 		CheckMenuItem(m_hMenu, ID_PENCOLOR_WHITE, MF_CHECKED);
@@ -389,7 +396,6 @@ void CMainFrame::OnDoSomething(UINT nID){
 		gLogBrush.lbHatch = HS_CROSS;
 		return;
 	}
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////

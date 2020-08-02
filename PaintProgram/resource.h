@@ -3,7 +3,7 @@
 // Used by PaintProgram.rc
 //
 #define IDR_MAINFRAME                   101
-#define IDC_CURSOR                      102
+#define IDC_GREEN_CURSOR                102
 #define IDR_MENU_RES                    103
 #define ID_FILE_EXIT                    104
 #define ID_PRIMITIVE_LINE               105

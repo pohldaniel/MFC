@@ -38,10 +38,13 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\cursor.cur">
+    <None Include="res\rd_cur.cur">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="res\rd_cur.cur">
+    <None Include="res\gr_cur.cur">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\bl_cur.cur">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

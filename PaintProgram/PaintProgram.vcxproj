@@ -91,7 +91,8 @@
     <Image Include="res\Paint Program.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\cursor.cur" />
+    <None Include="res\bl_cur.cur" />
+    <None Include="res\gr_cur.cur" />
     <None Include="res\rd_cur.cur" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

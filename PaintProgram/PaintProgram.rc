@@ -60,10 +60,10 @@ FRAME_LOAD              ICON                    "res\\Paint Program.ico"
 // Cursor
 //
 
-IDC_CURSOR              CURSOR                  "res\\cursor.cur"
+IDC_GREEN_CURSOR        CURSOR                  "res\\gr_cur.cur"
 IDC_RED_CURSOR          CURSOR                  "res\\rd_cur.cur"
-IDC_BLUE_CURSOR          CURSOR                 "res\\bl_cur.cur"
-FRAME_LOAD              CURSOR                  "res\\cursor.cur"
+IDC_BLUE_CURSOR         CURSOR                  "res\\bl_cur.cur"
+FRAME_LOAD              CURSOR                  "res\\gr_cur.cur"
 
 /////////////////////////////////////////////////////////////////////////////
 //

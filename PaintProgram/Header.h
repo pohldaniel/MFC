@@ -24,7 +24,7 @@ protected:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
-
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	DECLARE_MESSAGE_MAP()
 
 private:
@@ -53,7 +53,7 @@ public:
 	CMainFrame::CMainFrame(std::string title);
 
 protected:
-	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct); 
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg void OnPaint();
@@ -64,12 +64,16 @@ protected:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnDoSomething(UINT nID);
-
+	afx_msg void OnMeasureItem(int nIDCtl,LPMEASUREITEMSTRUCT lpMeasureItemStruct);
+	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
 	
 	DECLARE_MESSAGE_MAP()
+	BOOL OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult);
+	//BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs);
 
 public:
 	afx_msg void Exit();
+	
 	HMENU     m_hMenu;
 
 	const COLORREF BLACK = RGB(0, 0, 0);
@@ -88,6 +92,9 @@ public:
 	LOGBRUSH gLogBrush;
 
 	SHAPE m_shape;
+private:
+
+	CMenu *pCurrentMenu;
 };
 
 class CPaintProgram : public CWinApp {

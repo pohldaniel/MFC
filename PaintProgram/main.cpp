@@ -3,7 +3,7 @@
 CMainView::CMainView(CFrameWnd *parent) {
 
 	m_mainFrame = (CMainFrame*)parent;
-	Create(0, 0, WS_CHILD | WS_VISIBLE, CRect(90, 120, 800, 600), parent, AFX_IDW_PANE_FIRST);
+	Create(0, 0, WS_CHILD | WS_VISIBLE, CRect(0, 0, 800, 600), parent, AFX_IDW_PANE_FIRST);
 	m_hWnd = this->GetSafeHwnd();
 }
 
@@ -39,6 +39,7 @@ BEGIN_MESSAGE_MAP(CMainView, CView)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
 	ON_WM_RBUTTONDOWN()
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 BOOL CMainView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message) {
@@ -101,7 +102,11 @@ void CMainView::OnLButtonUp(UINT nFlags, CPoint point){
 }
 
 void CMainView::OnRButtonDown(UINT nFlags, CPoint point){
-	::SetCursor(AfxGetApp()->LoadCursorW(IDC_CURSOR));
+	::SetCursor(AfxGetApp()->LoadCursorW(IDC_GREEN_CURSOR));
+}
+
+void CMainView::OnSize(UINT nType, int cx, int cy) {
+	CView::OnSize(nType, cx, cy);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -112,28 +117,45 @@ CMainFrame::CMainFrame(std::string title) {
 	/*** use the LoadAccelTable from CFrameWnd **/
 	this->LoadAccelTable(MAKEINTRESOURCE(IDR_ACCELERATOR_RES));
 
-	CString strWndClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW | CS_OWNDC, AfxGetApp()->LoadCursorW(IDC_CURSOR), (HBRUSH)GetStockObject(WHITE_BRUSH), AfxGetApp()->LoadIconW(IDR_MAINFRAME));
-
+	CString strWndClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW , AfxGetApp()->LoadCursorW(IDC_GREEN_CURSOR), (HBRUSH)GetStockObject(WHITE_BRUSH), AfxGetApp()->LoadIconW(IDR_MAINFRAME));
+	
 	wchar_t *wtitle = new wchar_t[strlen(title.c_str()) + 1];
 	mbstowcs(wtitle, title.c_str(), strlen(title.c_str()) + 1);
 
-	Create(strWndClass,
-		   wtitle,
-		   WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
+	
+	// add the menu at the craetion process
+	/*Create(strWndClass, wtitle,
+		   WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX| WS_SIZEBOX,
 		   CRect(90, 120, 800, 600), NULL, MAKEINTRESOURCE(IDR_MENU_RES));
 
-	delete[] wtitle;
+	m_hMenu = this->GetMenu()->GetSafeHmenu();*/
 
-	new CMainView(this);
+	Create(strWndClass, wtitle,
+		WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SIZEBOX,
+		CRect(90, 120, 800, 600));
+
+	// Dynamically create a menu... 
+	/*pCurrentMenu = new CMenu();
+	pCurrentMenu->LoadMenuW(MAKEINTRESOURCE(IDR_MENU_RES));
+	SetMenu(pCurrentMenu);
+	// Draw the menu on the frame (this is not required 
+	// if this is the only time we will create a menu)
+	//DrawMenuBar();
+
 
 	//get the HMENU out of the CMenu
-	m_hMenu = this->GetMenu()->GetSafeHmenu();
+	m_hMenu = pCurrentMenu->GetSafeHmenu();*/
+
+
+	delete[] wtitle;
 
 	CheckMenuItem(m_hMenu, ID_PRIMITIVE_LINE, MF_CHECKED);
 	CheckMenuItem(m_hMenu, ID_PENCOLOR_BLACK, MF_CHECKED);	
 	CheckMenuItem(m_hMenu, ID_BRUSHCOLOR_BLACK, MF_CHECKED);
 	CheckMenuItem(m_hMenu, ID_PENSTYLE_SOLID, MF_CHECKED);
 	CheckMenuItem(m_hMenu, ID_BRUSHSTYLE_SOLID, MF_CHECKED);
+
+	new CMainView(this);
 
 	m_shape = SHAPE::LINE;
 
@@ -146,13 +168,27 @@ CMainFrame::CMainFrame(std::string title) {
 	gLogBrush.lbHatch = HS_DIAGCROSS;
 }
 
+/*BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs){
+		 cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW | CS_OWNDC, 
+										    AfxGetApp()->LoadCursorW(IDC_CURSOR), 
+										    (HBRUSH)GetStockObject(BLACK_BRUSH), 
+											AfxGetApp()->LoadIconW(IDR_MAINFRAME));
+	return CFrameWnd::PreCreateWindow(cs);
+}*/
+
+BOOL CMainFrame::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult) {
+	return CFrameWnd::OnNotify(wParam, lParam, pResult);
+}
+
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_CREATE()
+	ON_WM_MEASUREITEM()
+	ON_WM_DRAWITEM()
 	ON_WM_SHOWWINDOW()
 	//ON_WM_ACTIVATE()
 	ON_WM_PAINT()
 	ON_WM_MOVE()	
-	//ON_WM_SIZE()
+	ON_WM_SIZE()
 	ON_WM_KEYDOWN()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_MOUSEMOVE()
@@ -161,14 +197,125 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 END_MESSAGE_MAP()
 
 
+void CMainFrame::OnMeasureItem(int nIDCtl, LPMEASUREITEMSTRUCT lpMeasureItemStruct){
+	//Sample 05: Provide Height and widths
+	UINT height = 20;
+	UINT width = 40;
+	lpMeasureItemStruct->itemHeight = height;
+	lpMeasureItemStruct->itemWidth = width;
+	CFrameWnd::OnMeasureItem(nIDCtl, lpMeasureItemStruct);
+}
+
+void CMainFrame::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct){
+	//6.1: Get the device context from the Draw Item structure and attach that to a dc object
+	CDC menu_dc;
+	menu_dc.Attach(lpDrawItemStruct->hDC);
+
+	//6.2: Test item state. When the item is selected, draw a black border over it.
+	//	   When item is not selected draw the border in menu's background color 
+	//	   (Clears previous drawn border)	
+	CBrush * brush;
+	RECT menu_item_rct = lpDrawItemStruct->rcItem;
+	if (lpDrawItemStruct->itemState & ODS_SELECTED)
+		brush = new CBrush(RGB(0, 0, 0));
+	else
+	{
+		DWORD color_index = ::GetSysColor(COLOR_MENU);
+		brush = new CBrush(color_index);
+	}
+	menu_dc.FrameRect(&menu_item_rct, brush);
+	delete brush;
+
+
+	brush = new CBrush(RGB(255, 0, 0));
+	
+	CRect menu_rct(menu_item_rct);
+	menu_rct.DeflateRect(1, 2);
+	menu_dc.FillRect(menu_rct, brush);
+	delete brush;
+
+
+	menu_dc.TextOut(lpDrawItemStruct->rcItem.left,
+		lpDrawItemStruct->rcItem.top, L"File");
+
+	//6.4: Detach win32 handle
+	menu_dc.Detach();
+	CFrameWnd::OnDrawItem(nIDCtl, lpDrawItemStruct);
+}
+
+
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
 
-	if (CFrameWnd::OnCreate(lpCreateStruct) == 0) {
-		
-		return 0;
+	if (CFrameWnd::OnCreate(lpCreateStruct) == -1) {	
+		return -1;
 	}
-	return -1;
+
+	/*CBrush* NewBrush;
+	NewBrush = new CBrush;
+	NewBrush->CreateSolidBrush(RGB(139, 137, 137));
+
+	MENUINFO MenuInfo = { 0 };
+	MenuInfo.cbSize = sizeof(MENUINFO);
+
+	MenuInfo.hbrBack = ::CreateSolidBrush(RGB(0, 255, 0));
+	MenuInfo.fMask = MIM_BACKGROUND | MIM_STYLE;
+	MenuInfo.dwStyle = MIM_APPLYTOSUBMENUS;
+
+
+	
+	if (IsMenu(m_hMenu)){
+
+		SetMenuInfo(m_hMenu, &MenuInfo);
+	}
+	pCurrentMenu->SetMenuInfo(&MenuInfo);*/
+	
+	pCurrentMenu = new CMenu();
+	pCurrentMenu->LoadMenuW(MAKEINTRESOURCE(IDR_MENU_RES));
+	pCurrentMenu->ModifyMenu(0, MF_BYPOSITION | MF_OWNERDRAW| MF_STRING, 0, L"Resume");
+	//pCurrentMenu->EnableMenuItem(ID_FILE_EXIT, MF_BYCOMMAND | MF_ENABLED, );
+	
+
+
+
+	//pCurrentMenu->ModifyMenu(ID_PRIMITIVE_LINE, MF_BYCOMMAND | MF_OWNERDRAW | MF_STRING, ID_PRIMITIVE_LINE, L"Resume");
+	//pCurrentMenu->EnableMenuItem(ID_PRIMITIVE_LINE, MF_BYCOMMAND | MF_ENABLED);
+	/*CMenu* pMenu = new CMenu();
+	HMENU hMenu = pCurrentMenu->GetSubMenu(2)->GetSafeHmenu();
+	pMenu->Attach(hMenu);
+	pMenu->ModifyMenu(0, MF_BYPOSITION | MF_OWNERDRAW, 0);*/
+
+
+
+	SetMenu(pCurrentMenu);
+	// Draw the menu on the frame (this is not required 
+	// if this is the only time we will create a menu)
+	//DrawMenuBar();
+
+
+	//get the HMENU out of the CMenu
+	m_hMenu = pCurrentMenu->GetSafeHmenu();
+
+	CBrush* NewBrush;
+	NewBrush = new CBrush;
+	NewBrush->CreateSolidBrush(RGB(0, 255, 0));
+
+	MENUINFO MenuInfo = { 0 };
+	MenuInfo.cbSize = sizeof(MenuInfo);
+	MenuInfo.hbrBack = *NewBrush; // Brush you want to draw
+	MenuInfo.fMask = MIM_BACKGROUND | MIM_STYLE;
+	MenuInfo.dwStyle = MIM_APPLYTOSUBMENUS;
+
+
+
+	
+	SetMenuInfo(m_hMenu, &MenuInfo);
+	//SetMenuInfo(pMenu->m_hMenu, &MenuInfo);
+	
+	
+	return 0;
 }
+
+
 
 void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus){
 
@@ -192,7 +339,7 @@ void CMainFrame::OnPaint(){
 }
 
 void CMainFrame::OnSize(UINT nType, int cx, int cy){
-	//CMainFrame::OnSize(nType, cx, cy);
+	CFrameWnd::OnSize(nType, cx, cy);
 }
 
 void CMainFrame::OnMove(int x, int y){
@@ -399,6 +546,16 @@ void CMainFrame::OnDoSomething(UINT nID){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+class CMyFrame : public CFrameWnd {
+public:
+	CMyFrame() {
+		Create(NULL, _T("MFC Application Tutorial"));
+	}
+};
+
 BOOL CPaintProgram::InitInstance() {
 
 	AllocConsole();
@@ -410,7 +567,7 @@ BOOL CPaintProgram::InitInstance() {
 	CMainFrame *Frame = new CMainFrame("Paint Program");
 	m_pMainWnd = Frame;
 
-	Frame->ShowWindow(SW_SHOW);
+	Frame->ShowWindow(SW_NORMAL);
 	Frame->UpdateWindow();
 
 	return TRUE;

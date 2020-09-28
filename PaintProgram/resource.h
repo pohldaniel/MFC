@@ -24,14 +24,15 @@
 #define ID_PENSTYLE_NULL                121
 #define ID_PENSTYLE_DOTTED              122
 #define ID_PENSTYLE_DASHED              123
-#define ID_BRUSHSTYLE_SOLID             124
-#define ID_BRUSHSTYLE_NULL              125
-#define ID_BRUSHSTYLE_DIAGONAL          126
-#define ID_BRUSHSTYLE_CROSS             127
-#define IDR_ACCELERATOR_RES             128
-#define IDS_STRING_RES                  129
-#define FRAME_LOAD                      130
-#define IDC_RED_CURSOR					131
+#define ID_BRUSHSTYLE_NULL              124
+#define ID_BRUSHSTYLE_SOLID             125
+#define ID_BRUSHSTYLE_DOTTED            126
+#define ID_BRUSHSTYLE_DIAGONAL          127
+#define ID_BRUSHSTYLE_CROSS             128
+#define IDR_ACCELERATOR_RES             129
+#define IDS_STRING_RES                  130
+#define FRAME_LOAD                      131
+#define IDC_RED_CURSOR					132
 #define IDC_BLUE_CURSOR					136
 // Next default values for new objects
 // 

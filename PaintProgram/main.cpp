@@ -207,39 +207,42 @@ void CMainFrame::OnMeasureItem(int nIDCtl, LPMEASUREITEMSTRUCT lpMeasureItemStru
 }
 
 void CMainFrame::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct){
-	//6.1: Get the device context from the Draw Item structure and attach that to a dc object
-	CDC menu_dc;
-	menu_dc.Attach(lpDrawItemStruct->hDC);
 
-	//6.2: Test item state. When the item is selected, draw a black border over it.
-	//	   When item is not selected draw the border in menu's background color 
-	//	   (Clears previous drawn border)	
-	CBrush * brush;
-	RECT menu_item_rct = lpDrawItemStruct->rcItem;
-	if (lpDrawItemStruct->itemState & ODS_SELECTED)
-		brush = new CBrush(RGB(0, 0, 0));
-	else
-	{
-		DWORD color_index = ::GetSysColor(COLOR_MENU);
-		brush = new CBrush(color_index);
+	if (lpDrawItemStruct->CtlType == ODT_MENU){
+
+		//6.1: Get the device context from the Draw Item structure and attach that to a dc object
+		CDC* menu_dc = CDC::FromHandle(lpDrawItemStruct->hDC);
+		menu_dc->Attach(lpDrawItemStruct->hDC);
+
+		//6.2: Test item state. When the item is selected, draw a black border over it.
+		//	   When item is not selected draw the border in menu's background color 
+		//	   (Clears previous drawn border)	
+		CBrush * brush;
+		RECT menu_item_rct = lpDrawItemStruct->rcItem;
+		if (lpDrawItemStruct->itemState & ODS_SELECTED)
+			brush = new CBrush(RGB(0, 0, 0));
+		else {
+			DWORD color_index = ::GetSysColor(COLOR_MENU);
+			brush = new CBrush(color_index);
+		}
+		menu_dc->FrameRect(&menu_item_rct, brush);
+		delete brush;
+
+
+		brush = new CBrush(RGB(255, 0, 0));
+
+		CRect menu_rct(menu_item_rct);
+		menu_rct.DeflateRect(1, 2);
+		menu_dc->FillRect(menu_rct, brush);
+		delete brush;
+
+		LPCTSTR lpszText = (LPCTSTR)lpDrawItemStruct->itemData;
+
+		CString* cstr = (CString*)lpDrawItemStruct->itemData;
+		menu_dc->DrawText(*cstr, menu_rct, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		//6.4: Detach win32 handle
+		menu_dc->Detach();
 	}
-	menu_dc.FrameRect(&menu_item_rct, brush);
-	delete brush;
-
-
-	brush = new CBrush(RGB(255, 0, 0));
-	
-	CRect menu_rct(menu_item_rct);
-	menu_rct.DeflateRect(1, 2);
-	menu_dc.FillRect(menu_rct, brush);
-	delete brush;
-
-
-	menu_dc.TextOut(lpDrawItemStruct->rcItem.left,
-		lpDrawItemStruct->rcItem.top, L"File");
-
-	//6.4: Detach win32 handle
-	menu_dc.Detach();
 	CFrameWnd::OnDrawItem(nIDCtl, lpDrawItemStruct);
 }
 
@@ -250,68 +253,34 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
 		return -1;
 	}
 
-	/*CBrush* NewBrush;
-	NewBrush = new CBrush;
-	NewBrush->CreateSolidBrush(RGB(139, 137, 137));
-
-	MENUINFO MenuInfo = { 0 };
-	MenuInfo.cbSize = sizeof(MENUINFO);
-
-	MenuInfo.hbrBack = ::CreateSolidBrush(RGB(0, 255, 0));
-	MenuInfo.fMask = MIM_BACKGROUND | MIM_STYLE;
-	MenuInfo.dwStyle = MIM_APPLYTOSUBMENUS;
-
-
-	
-	if (IsMenu(m_hMenu)){
-
-		SetMenuInfo(m_hMenu, &MenuInfo);
-	}
-	pCurrentMenu->SetMenuInfo(&MenuInfo);*/
-	
 	pCurrentMenu = new CMenu();
 	pCurrentMenu->LoadMenuW(MAKEINTRESOURCE(IDR_MENU_RES));
-	pCurrentMenu->ModifyMenu(0, MF_BYPOSITION | MF_OWNERDRAW| MF_STRING, 0, L"Resume");
-	//pCurrentMenu->EnableMenuItem(ID_FILE_EXIT, MF_BYCOMMAND | MF_ENABLED, );
+
+	CString *str = new CString();
+
 	
-
-
-
-	//pCurrentMenu->ModifyMenu(ID_PRIMITIVE_LINE, MF_BYCOMMAND | MF_OWNERDRAW | MF_STRING, ID_PRIMITIVE_LINE, L"Resume");
-	//pCurrentMenu->EnableMenuItem(ID_PRIMITIVE_LINE, MF_BYCOMMAND | MF_ENABLED);
-	/*CMenu* pMenu = new CMenu();
-	HMENU hMenu = pCurrentMenu->GetSubMenu(2)->GetSafeHmenu();
-	pMenu->Attach(hMenu);
-	pMenu->ModifyMenu(0, MF_BYPOSITION | MF_OWNERDRAW, 0);*/
-
-
+	for (int i = 0; i < 2; i++) {
+		str = new CString();
+		pCurrentMenu->GetMenuString(i, *str, MF_BYPOSITION);
+		pCurrentMenu->ModifyMenu(i, MF_BYPOSITION | MF_OWNERDRAW | MF_STRING, i, (LPCTSTR)str);
+	}
 
 	SetMenu(pCurrentMenu);
-	// Draw the menu on the frame (this is not required 
-	// if this is the only time we will create a menu)
-	//DrawMenuBar();
-
-
+	
 	//get the HMENU out of the CMenu
 	m_hMenu = pCurrentMenu->GetSafeHmenu();
 
-	CBrush* NewBrush;
-	NewBrush = new CBrush;
-	NewBrush->CreateSolidBrush(RGB(0, 255, 0));
+	CBrush* greenBrush;
+	greenBrush = new CBrush;
+	greenBrush->CreateSolidBrush(RGB(0, 255, 0));
 
 	MENUINFO MenuInfo = { 0 };
 	MenuInfo.cbSize = sizeof(MenuInfo);
-	MenuInfo.hbrBack = *NewBrush; // Brush you want to draw
+	MenuInfo.hbrBack = *greenBrush; // Brush you want to draw
 	MenuInfo.fMask = MIM_BACKGROUND | MIM_STYLE;
 	MenuInfo.dwStyle = MIM_APPLYTOSUBMENUS;
-
-
-
 	
 	SetMenuInfo(m_hMenu, &MenuInfo);
-	//SetMenuInfo(pMenu->m_hMenu, &MenuInfo);
-	
-	
 	return 0;
 }
 

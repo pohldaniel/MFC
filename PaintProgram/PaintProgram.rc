@@ -107,7 +107,7 @@ BEGIN
     POPUP "Brush &Style"
     BEGIN
         MENUITEM "&Solid",                      ID_BRUSHSTYLE_SOLID
-        MENUITEM "&Null",                       ID_BRUSHSTYLE_NULL
+        MENUITEM "&Unfilled",					ID_BRUSHSTYLE_NULL
         MENUITEM "&Diagonal",                   ID_BRUSHSTYLE_DIAGONAL
         MENUITEM "&Cross",                      ID_BRUSHSTYLE_CROSS
     END

@@ -215,7 +215,7 @@ void CMainFrame::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct){
 		menu_dc->Attach(lpDrawItemStruct->hDC);
 
 		//6.2: Test item state. When the item is selected, draw a black border over it.
-		//	   When item is not selected draw the border in menu's background color 
+		//	  When item is not selected draw the border in menu's background color 
 		//	   (Clears previous drawn border)	
 		CBrush * brush;
 		RECT menu_item_rct = lpDrawItemStruct->rcItem;

@@ -61,12 +61,10 @@ void CMainView::OnMouseMove(UINT nFlags, CPoint point){
 	HWND hwnd = NULL;
 	if (pWnd){
 		hwnd = pWnd->GetSafeHwnd();
-
 		SetWindowTextA(hwnd, MsgCoord);
 	}
 
 	if (gMouseDown){
-		// Current mouse position is stored in the lParam.
 		p1.x = point.x;
 		p1.y = point.y;
 		Invalidate();
@@ -94,7 +92,6 @@ void CMainView::OnLButtonUp(UINT nFlags, CPoint point){
 	ReleaseCapture();
 	gMouseDown = false;
 
-	// Current mouse position is stored in the lParam.
 	p1.x = point.x;
 	p1.y = point.y;
 
@@ -111,7 +108,6 @@ void CMainView::OnSize(UINT nType, int cx, int cy) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CMainFrame::CMainFrame(std::string title) {
-
 	//LoadFrame(FRAME_LOAD, WS_VISIBLE | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
 
 	/*** use the LoadAccelTable from CFrameWnd **/
@@ -122,31 +118,16 @@ CMainFrame::CMainFrame(std::string title) {
 	wchar_t *wtitle = new wchar_t[strlen(title.c_str()) + 1];
 	mbstowcs(wtitle, title.c_str(), strlen(title.c_str()) + 1);
 
+	//Add the menu dynamically at OnCreate
+	Create(strWndClass, wtitle,
+	WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SIZEBOX,
+	CRect(90, 120, 800, 600));
 	
-	// add the menu at the craetion process
+	//First alternative: Add the menu at the craetion process
 	/*Create(strWndClass, wtitle,
 		   WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX| WS_SIZEBOX,
-		   CRect(90, 120, 800, 600), NULL, MAKEINTRESOURCE(IDR_MENU_RES));
-
-	m_hMenu = this->GetMenu()->GetSafeHmenu();*/
-
-	Create(strWndClass, wtitle,
-		WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SIZEBOX,
-		CRect(90, 120, 800, 600));
-
-	// Dynamically create a menu... 
-	/*pCurrentMenu = new CMenu();
-	pCurrentMenu->LoadMenuW(MAKEINTRESOURCE(IDR_MENU_RES));
-	SetMenu(pCurrentMenu);
-	// Draw the menu on the frame (this is not required 
-	// if this is the only time we will create a menu)
-	//DrawMenuBar();
-
-
-	//get the HMENU out of the CMenu
-	m_hMenu = pCurrentMenu->GetSafeHmenu();*/
-
-
+		   CRect(90, 120, 800, 600), NULL, MAKEINTRESOURCE(IDR_MENU_RES));*/
+	
 	delete[] wtitle;
 
 	CheckMenuItem(m_hMenu, ID_PRIMITIVE_LINE, MF_CHECKED);
@@ -253,22 +234,25 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
 		return -1;
 	}
 
+	//Dynamically create a menu.
 	pCurrentMenu = new CMenu();
 	pCurrentMenu->LoadMenuW(MAKEINTRESOURCE(IDR_MENU_RES));
+	SetMenu(pCurrentMenu);
+	m_hMenu = pCurrentMenu->GetSafeHmenu();
+	
+
+	//Alternative: Add the menu at the Create process
+	//m_hMenu = this->GetMenu()->GetSafeHmenu();
+	//pCurrentMenu = this->GetMenu();
 
 	CString *str = new CString();
-
 	
+	//mark to of the menu button as modifiable they will manipulated at OnDrawItem
 	for (int i = 0; i < 2; i++) {
 		str = new CString();
 		pCurrentMenu->GetMenuString(i, *str, MF_BYPOSITION);
 		pCurrentMenu->ModifyMenu(i, MF_BYPOSITION | MF_OWNERDRAW | MF_STRING, i, (LPCTSTR)str);
 	}
-
-	SetMenu(pCurrentMenu);
-	
-	//get the HMENU out of the CMenu
-	m_hMenu = pCurrentMenu->GetSafeHmenu();
 
 	CBrush* greenBrush;
 	greenBrush = new CBrush;
@@ -515,16 +499,6 @@ void CMainFrame::OnDoSomething(UINT nID){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-class CMyFrame : public CFrameWnd {
-public:
-	CMyFrame() {
-		Create(NULL, _T("MFC Application Tutorial"));
-	}
-};
-
 BOOL CPaintProgram::InitInstance() {
 
 	AllocConsole();
